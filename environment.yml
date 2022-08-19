@@ -1,0 +1,23 @@
+name: contrastive-env
+channels:
+- pytorch
+- pyg
+- conda-forge
+- defaults
+dependencies:
+- python=3.8
+- pip
+- numpy
+- scipy
+- seaborn
+- matplotlib
+- jupyter
+- jupyterlab
+- pytorch=1.11
+- tqdm
+- joblib
+- pyg
+- h5py
+- pip:
+    - pytorch-lightning
+    - ase

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="960e9b58-98ef-46dc-9b2d-05f515bbad36" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectId" id="2DPSv2ClCulhJDvKSRqpzhbC0lR" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/raw" />
+      <recent name="$PROJECT_DIR$/raw_data" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="pytest in test_chem_env.py" type="tests" factoryName="py.test" nameIsGenerated="true">
+      <module name="contrastive-env" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="/opt/miniconda3/envs/contrastive-env/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_keywords" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/test_chem_env.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="960e9b58-98ef-46dc-9b2d-05f515bbad36" name="Default Changelist" comment="" />
+      <created>1660599453712</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1660599453712</updated>
+      <workItem from="1660599455832" duration="13390000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="184" y="109" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1660848911317">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state x="184" y="109" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1440.900@0.0.1440.900" timestamp="1660848911317" />
+    <state width="1396" height="226" key="GridCell.Tab.0.bottom" timestamp="1660926987958">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1396" height="226" key="GridCell.Tab.0.bottom/0.0.1440.900@0.0.1440.900" timestamp="1660926987958" />
+    <state width="1396" height="226" key="GridCell.Tab.0.center" timestamp="1660926987957">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1396" height="226" key="GridCell.Tab.0.center/0.0.1440.900@0.0.1440.900" timestamp="1660926987957" />
+    <state width="1396" height="226" key="GridCell.Tab.0.left" timestamp="1660926987956">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1396" height="226" key="GridCell.Tab.0.left/0.0.1440.900@0.0.1440.900" timestamp="1660926987956" />
+    <state width="1396" height="226" key="GridCell.Tab.0.right" timestamp="1660926987958">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1396" height="226" key="GridCell.Tab.0.right/0.0.1440.900@0.0.1440.900" timestamp="1660926987958" />
+    <state width="1396" height="284" key="GridCell.Tab.1.bottom" timestamp="1660849238964">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1396" height="284" key="GridCell.Tab.1.bottom/0.0.1440.900@0.0.1440.900" timestamp="1660849238964" />
+    <state width="1396" height="284" key="GridCell.Tab.1.center" timestamp="1660849238963">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1396" height="284" key="GridCell.Tab.1.center/0.0.1440.900@0.0.1440.900" timestamp="1660849238963" />
+    <state width="1396" height="284" key="GridCell.Tab.1.left" timestamp="1660849238963">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1396" height="284" key="GridCell.Tab.1.left/0.0.1440.900@0.0.1440.900" timestamp="1660849238963" />
+    <state width="1396" height="284" key="GridCell.Tab.1.right" timestamp="1660849238964">
+      <screen x="0" y="0" width="1440" height="900" />
+    </state>
+    <state width="1396" height="284" key="GridCell.Tab.1.right/0.0.1440.900@0.0.1440.900" timestamp="1660849238964" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/chemical_env.py</url>
+          <line>67</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/contrastive_env$pytest_in_test_chem_env_py.coverage" NAME="pytest in test_chem_env.py Coverage Results" MODIFIED="1660861154031" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
