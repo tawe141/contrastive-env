@@ -18,6 +18,7 @@ dependencies:
 - joblib
 - pyg
 - h5py
+- pytest
 - pip:
     - pytorch-lightning
     - ase

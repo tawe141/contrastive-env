@@ -1,4 +1,5 @@
 from typing import List, Union, Tuple
+from attr import has
 import torch
 from torch_geometric.data import Dataset, Data
 import numpy as np
@@ -50,14 +51,19 @@ class BenzeneMD17(Dataset):
     def __init__(self, root, r_cutoff=3.0, transform=None, pre_transform=None, pre_filter=None):
         self.r_cutoff = r_cutoff
         super().__init__(root, transform, pre_transform, pre_filter)
-        self.f = h5py.File(self.processed_paths[0])
+        # To support parallel reading from an hdf5 file, open this under __getitem__
+        # see https://github.com/pytorch/pytorch/issues/11929#issuecomment-649760983
+        # self.f = h5py.File(self.processed_paths[0])
 
     @property
     def raw_file_names(self) -> Union[str, List[str], Tuple]:
         return 'benzene2017_dft.npz'
 
     def len(self):
-        return len(self.f['E']) * len(self.f['z'])
+        if not hasattr(self, '_length'):
+            with np.load(self.raw_paths[0]) as raw:
+                self._length = len(raw['E']) * len(raw['z'])
+        return self._length
 
     @property
     def processed_file_names(self) -> Union[str, List[str], Tuple]:
@@ -69,6 +75,11 @@ class BenzeneMD17(Dataset):
             f = h5py.File(self.processed_paths[0], 'w')
             for i in ('E', 'F', 'R', 'z'):
                 f.create_dataset(i, data=raw[i])
+
+    def __getitem__(self, idx):
+        if not hasattr(self, 'f'):
+            self.f = h5py.File(self.processed_paths[0])
+        return super().__getitem__(idx)
 
     def get(self, idx):
         mol_num, atom_num = divmod(idx, len(self.f['z']))
