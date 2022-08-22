@@ -25,10 +25,10 @@ class ContrastiveRepresentation(pl.LightningModule):
         super().__init__()
         self.encoder = Sequential('x, edge_index, pos', [
             (Embedding(136, hidden_width), 'x -> x'),
-            (Dropout(p=0.1), 'x -> x'),
+            # (Dropout(p=0.1), 'x -> x'),
             (NaiveGCNLayer(hidden_width, hidden_width), 'x, edge_index, pos -> x'),
             ReLU(inplace=True),
-            (Dropout(p=0.1), 'x -> x'),
+            # (Dropout(p=0.1), 'x -> x'),
             (NaiveGCNLayer(hidden_width, hidden_width), 'x, edge_index, pos -> x'),
             ReLU(inplace=True),
             (Linear(hidden_width, hidden_width), 'x -> x')
@@ -53,27 +53,58 @@ class ContrastiveRepresentation(pl.LightningModule):
     #     self.log('contrastive_loss', loss)
     #     return loss
 
-    def contrastive_loss(self, z):
-        proj = z @ z.transpose(0, 1)
-        return torch.trace(-log_softmax(proj, dim=0)) / len(z)
+    def contrastive_loss(self, z1, z2=None):
+        if z2 is None:
+            z2 = z1
+        proj = z1 @ z2.transpose(0, 1)
+        return torch.trace(-log_softmax(proj, dim=0)) / len(z1)
 
     def training_step(self, batch) -> float:
         z = self.encoder(batch.x, batch.edge_index, batch.pos)
 
         loss = self.contrastive_loss(z)
         self.log('contrastive_loss', loss)
+        if self.global_step % 1000 == 0:
+            self.log_representations(z, batch.x)
         return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
 
+    def log_representations(self, z, metadata):
+        self.logger.experiment.add_embedding(z, global_step=self.global_step)
 
-model = ContrastiveRepresentation()
+
+class CosineContrastiveRepresentation(ContrastiveRepresentation):
+    def contrastive_loss(self, z1, z2=None):
+        z1 = z1 / torch.norm(z1, dim=1, keepdim=True)
+        if z2 is not None:
+            z2 = z2 / torch.norm(z2, dim=1, keepdim=True)
+        return super().contrastive_loss(z1, z2)
+
+
+class PosNoise(CosineContrastiveRepresentation):
+    def __init__(self, noise=0.01):
+        super().__init__()
+        self.noise = noise
+
+    def forward(self, batch):
+        z1 = self.encoder(batch.x, batch.edge_index, batch.pos)
+        z2 = self.encoder(batch.x, batch.edge_index, batch.pos + self.noise * torch.randn_like(batch.pos))
+
+        loss = self.contrastive_loss(z1, z2)
+        self.log('contrastive_loss', loss)
+        if self.global_step % 1000 == 0:
+            self.log_representations(z, batch.x)
+        return loss
+
+
+model = PosNoise()
 
 dataset = BenzeneMD17('.')
-dl = DataLoader(dataset, batch_size=16, shuffle=True, num_workers=6)
+dl = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=6)
 
 if __name__ == "__main__":
-    trainer = pl.Trainer(max_epochs=10)
+    trainer = pl.Trainer(max_epochs=10, accelerator='gpu')
     trainer.fit(model, dl)
