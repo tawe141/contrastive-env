@@ -2,7 +2,6 @@ name: contrastive-env
 channels:
 - pytorch
 - pyg
-- conda-forge
 - defaults
 dependencies:
 - python=3.8
@@ -19,6 +18,7 @@ dependencies:
 - pyg
 - h5py
 - pytest
+- tensorboard
 - pip:
     - pytorch-lightning
     - ase
