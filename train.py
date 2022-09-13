@@ -5,6 +5,7 @@ from torch.nn import ReLU, Linear, Embedding, Dropout
 from torch.nn.functional import log_softmax, cross_entropy, relu
 import pytorch_lightning as pl
 from chemical_env import BenzeneMD17
+from pytorch_lightning.callbacks import ModelCheckpoint
 from math import sin, cos
 from copy import deepcopy
 
@@ -41,15 +42,14 @@ class NaiveGCNLayer(GCNConv):
 
 class ContrastiveRepresentation(pl.LightningModule):
     def __init__(self):
-        self.num_species = 2
         super().__init__()
         self._central_species_weights = Linear(HIDDEN_WIDTH, MAX_SPECIES)
         self.encoder = Sequential('x, edge_index, pos, batch', [
             (Embedding(MAX_SPECIES, HIDDEN_WIDTH), 'x -> x'),
-            # (Dropout(p=0.1), 'x -> x'),
+            (Dropout(p=0.1), 'x -> x'),
             (NaiveGCNLayer(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x, edge_index, pos -> x'),
             ReLU(inplace=True),
-            # (Dropout(p=0.1), 'x -> x'),
+            (Dropout(p=0.1), 'x -> x'),
             (NaiveGCNLayer(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x, edge_index, pos -> x'),
             (global_mean_pool, 'x, batch -> x'),
             (Linear(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x -> x')
@@ -106,7 +106,19 @@ class ContrastiveRepresentation(pl.LightningModule):
     #     z = self.encoder(batch.x, batch.edge_index, batch.pos)
     #
 
-    def central_species_loss(self, batch):
+    def contrastive_ramp(self):
+        linear_ramp = 0.0001 * (self.global_step - 5000)
+        weight = min(1, max(0, linear_ramp))
+        self.log('contrastive_ramp', weight)
+        return weight
+
+    # def hinge_central_species_loss(self, batch):
+    #     masked_x = deepcopy(batch.x)
+    #     masked_x[get_first_idx_in_batch(batch.batch)] = 0
+    #
+    #     z = self.encoder(masked_x, batch.edge_index, batch.pos, batch.batch)
+
+    def logistic_central_species_loss(self, batch):
         """
         Returns a loss based on predicting what the central atom species is
         TODO: a couple ways to implement this, and I don't know which one is better
@@ -122,7 +134,7 @@ class ContrastiveRepresentation(pl.LightningModule):
         masked_x[get_first_idx_in_batch(batch.batch)] = 0
 
         z = self._central_species_weights(
-            relu(self.encoder(masked_x, batch.edge_index, batch.pos, batch.batch))
+            self.encoder(masked_x, batch.edge_index, batch.pos, batch.batch)
         )
 
         loss = cross_entropy(z, get_first_in_batch(batch.x, batch.batch))
@@ -131,8 +143,9 @@ class ContrastiveRepresentation(pl.LightningModule):
 
     def training_step(self, batch) -> float:
         z = self.encoder(batch.x, batch.edge_index, batch.pos, batch.batch)
+        z2 = self.encoder(batch.x, batch.edge_index, batch.pos, batch.batch)  # get second for dropout noise
 
-        loss = self.contrastive_loss(z) + self.central_species_loss(batch)
+        loss = self.contrastive_ramp() * self.contrastive_loss(z, z2) + self.logistic_central_species_loss(batch)
         if self.global_step % 1000 == 0:
             self.log_representations(z, get_first_in_batch(batch.x, batch.batch))
         return loss
@@ -175,5 +188,6 @@ dataset = BenzeneMD17('.')
 dl = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=6)
 
 if __name__ == "__main__":
-    trainer = pl.Trainer(max_epochs=10)
+    checkpoint_callback = ModelCheckpoint(dirpath='checkpoints/', every_n_train_steps=5000)
+    trainer = pl.Trainer(max_epochs=10, callbacks=[checkpoint_callback])
     trainer.fit(model, dl)

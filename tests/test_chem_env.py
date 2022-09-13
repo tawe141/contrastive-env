@@ -18,4 +18,6 @@ def test_atom_env():
 def test_benzene_md17():
     dataset = BenzeneMD17('.')
     assert len(dataset) == 627983*12
-    assert dataset.get(0)
+    item = dataset[12]
+    assert torch.allclose(item.pos[0], torch.zeros(3))
+
