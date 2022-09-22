@@ -4,7 +4,7 @@ import torch
 from torch.nn import ReLU, Linear, Embedding, Dropout
 from torch.nn.functional import log_softmax, cross_entropy, relu
 import pytorch_lightning as pl
-from chemical_env import BenzeneMD17
+from chemical_env import BenzeneEnvMD17
 from pytorch_lightning.callbacks import ModelCheckpoint
 from math import sin, cos
 from copy import deepcopy
@@ -55,25 +55,6 @@ class ContrastiveRepresentation(pl.LightningModule):
             (Linear(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x -> x')
         ])
 
-# below is for a single query environment in a batch, but we should not restrict ourselves to just a 
-# single example in a batch! this amounts to true stochastic gradient descent...
-# maybe a better way is written after this.
-    # def contrastive_loss(self, z_query, z_pos, z_all):
-    #     keys = torch.cat([z_pos.unsqueeze(0), z_all[1:]], dim=0)
-    #     inner_prod = keys @ z_query
-    #     return -log_softmax(inner_prod)[0]
-
-    # def training_step(self, batch):
-    #     query = batch[0]
-    #     positive_key = query
-    #     z_query = self.encoder(query.x, query.edge_index, query.pos)[0]
-    #     z_pos = self.encoder(positive_key.x, positive_key.edge_index, positive_key.pos)[0]
-    #     z_all = self.encoder(batch.x, batch.edge_index, batch.pos)
-
-    #     loss = self.contrastive_loss(z_query, z_pos, z_all)
-    #     self.log('contrastive_loss', loss)
-    #     return loss
-
     def contrastive_loss(self, z1, z2=None):
         if z2 is None:
             z2 = z1
@@ -111,12 +92,6 @@ class ContrastiveRepresentation(pl.LightningModule):
         weight = min(1, max(0, linear_ramp))
         self.log('contrastive_ramp', weight)
         return weight
-
-    # def hinge_central_species_loss(self, batch):
-    #     masked_x = deepcopy(batch.x)
-    #     masked_x[get_first_idx_in_batch(batch.batch)] = 0
-    #
-    #     z = self.encoder(masked_x, batch.edge_index, batch.pos, batch.batch)
 
     def logistic_central_species_loss(self, batch):
         """
@@ -184,7 +159,7 @@ class PosNoise(CosineContrastiveRepresentation):
 
 model = CosineContrastiveRepresentation()
 
-dataset = BenzeneMD17('.')
+dataset = BenzeneEnvMD17('.')
 dl = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=6)
 
 if __name__ == "__main__":

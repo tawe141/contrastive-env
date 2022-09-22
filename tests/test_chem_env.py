@@ -1,4 +1,4 @@
-from chemical_env import AtomicEnvironment, BenzeneMD17
+from chemical_env import AtomicEnvironment, BenzeneMD17, BenzeneEnvMD17
 import torch
 
 
@@ -16,7 +16,7 @@ def test_atom_env():
 
 
 def test_benzene_md17():
-    dataset = BenzeneMD17('.')
+    dataset = BenzeneEnvMD17('.')
     assert len(dataset) == 627983*12
     item = dataset[12]
     assert torch.allclose(item.pos[0], torch.zeros(3))

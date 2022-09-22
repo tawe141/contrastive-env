@@ -1,13 +1,14 @@
 from typing import List, Union, Tuple
 from attr import has
 import torch
-from torch_geometric.data import Dataset, Data
+from torch_geometric.data import Dataset, Data, Batch
 import numpy as np
 import h5py
 from ase import Atoms
 from ase.neighborlist import NeighborList
 from scipy.spatial.distance import cdist
 import os
+from typing import List
 
 
 class AtomicEnvironment:
@@ -23,31 +24,35 @@ class AtomicEnvironment:
         return Data(x, edge_index, pos=pos)
 
 
-# class BenzeneMD17(Dataset):
-#     def __init__(self, root, r_cutoff=3.0, transform=None, pre_transform=None, pre_filter=None):
-#         self.r_cutoff = r_cutoff
-#         super().__init__(root, transform, pre_transform, pre_filter)
-#
-#     @property
-#     def raw_file_names(self) -> Union[str, List[str], Tuple]:
-#         return 'raw_data/benzene2017_dft.npz'
-#
-#     @property
-#     def processed_file_names(self) -> Union[str, List[str], Tuple]:
-#         basename = os.path.basename(self.raw_file_names)
-#         return 'processed_data/%s.hdf5' % basename
-#
-#     def process(self):
-#         f = h5py.File(self.processed_file_names, 'w')
-#         idx = 0
-#         with np.load(self.raw_file_names) as raw:
-#             z = raw['Z']
-#             R = raw['R']
-#             for pos in R:
-#                 conformer = Atoms(numbers=z, positions=pos)
-#                 for i, p in enumerate(pos):
+class MolecularBatch:
+    def __init__(self, batch_list: List[Batch]):
+        self.x = torch.cat([i.x for i in batch_list])
+        self.pos = torch.cat([i.pos for i in batch_list])
+        self.edge_index = self._collate_edge_index([i.edge_index for i in batch_list])
+        self.atom_batch = self._collate_atom_batch([i.batch for i in batch_list])
+        self.mol_batch = self._collate_mol_batch([i.num_graphs for i in batch_list])
 
-class BenzeneMD17(Dataset):
+    def _collate_edge_index(self, edge_index_list: List[torch.LongTensor]) -> torch.LongTensor:
+        graph_edge_count = torch.LongTensor([max(i) for i in edge_index_list])
+        shift = torch.cumsum(graph_edge_count) - graph_edge_count[0]
+        return torch.cat([
+            i + s for i, s in zip(edge_index_list, shift)
+        ], dim=1)
+
+    def _collate_atom_batch(self, batch_list: List[torch.Tensor]) -> torch.LongTensor:
+        batch_count = torch.LongTensor([max(i) for i in batch_list])
+        shift = torch.cumsum(batch_count) - batch_count[0]
+        return torch.cat([
+            i + s for i, s in zip(batch_list, shift)
+        ])
+
+    def _collate_mol_batch(self, num_atom_list: List[int]) -> torch.LongTensor:
+        num_atom_list = torch.LongTensor(num_atom_list)
+        shift = torch.cumsum(num_atom_list) - num_atom_list[0]
+        return num_atom_list + shift
+
+
+class BenzeneEnvMD17(Dataset):
     def __init__(self, root, r_cutoff=3.0, transform=None, pre_transform=None, pre_filter=None):
         self.r_cutoff = r_cutoff
         super().__init__(root, transform, pre_transform, pre_filter)
@@ -81,19 +86,31 @@ class BenzeneMD17(Dataset):
             self.f = h5py.File(self.processed_paths[0])
         return super().__getitem__(idx)
 
+    @staticmethod
+    def get_env(z, pos, atom_idx, r_cutoff):
+        assert len(z) == len(pos)
+        all_dist = cdist(pos[atom_idx].reshape(1, -1), pos).flatten()
+        within_cutoff = [i for i in range(len(all_dist)) if all_dist[i] <= r_cutoff and i != atom_idx]
+        rel_pos = torch.Tensor(pos[within_cutoff] - pos[atom_idx])
+        neighbor_z = torch.LongTensor(z[within_cutoff])
+        return AtomicEnvironment(z[atom_idx], env_species=neighbor_z, env_pos=rel_pos).to_pyg()
+
     def get(self, idx):
         mol_num, atom_num = divmod(idx, len(self.f['z']))
         z = self.f['z']
         pos = self.f['R'][mol_num]
-        all_dist = cdist(pos[atom_num].reshape(1, -1), pos).flatten()
-        within_cutoff = [i for i in range(len(all_dist)) if all_dist[i] <= self.r_cutoff and i != atom_num]
-        rel_pos = torch.Tensor(pos[within_cutoff] - pos[atom_num])
-        neighbor_z = torch.LongTensor(z[within_cutoff])
-        return AtomicEnvironment(z[atom_num], env_species=neighbor_z, env_pos=rel_pos).to_pyg()
+        return self.get_env(z, pos, atom_num, self.r_cutoff)
 
-        # conformer = Atoms(numbers=self.f['Z'], positions=self.f['R'][mol_num])
 
-        # nl = NeighborList([self.r_cutoff for _ in range(len(self.f['Z']))], self_interaction=False, bothways=True)
-        # nl.update(conformer)
-        # i, _ = nl.get_neighbors(atom_num)
+class BenzeneMD17(BenzeneEnvMD17):
+    def len(self):
+        if not hasattr(self, '_length'):
+            with np.load(self.raw_paths[0]) as raw:
+                self._length = len(raw['E'])
+        return self._length
 
+    def get(self, mol_num):
+        z = self.f['z']
+        pos = self.f['R'][mol_num]
+        data_list = [self.get_env(z, pos, i, self.r_cutoff) for i in range(len(z))]
+        return Batch.from_data_list(data_list)
