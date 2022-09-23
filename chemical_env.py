@@ -11,6 +11,10 @@ import os
 from typing import List
 
 
+def np_to_torch(a: np.ndarray) -> torch.Tensor:
+    return torch.from_numpy(a).type(torch.get_default_dtype())
+
+
 class AtomicEnvironment:
     def __init__(self, central_species: int, env_species: torch.LongTensor, env_pos: torch.Tensor):
         self.central_species = central_species
@@ -24,6 +28,18 @@ class AtomicEnvironment:
         return Data(x, edge_index, pos=pos)
 
 
+class Molecule(Batch):
+    total_energy: float
+    force: torch.Tensor
+
+    @classmethod
+    def from_envs(cls, data_list: list, total_energy: float, force: torch.FloatTensor):
+        mol = super().from_data_list(data_list)
+        mol.total_energy = total_energy
+        mol.force = force
+        return mol
+
+
 class MolecularBatch:
     def __init__(self, batch_list: List[Batch]):
         self.x = torch.cat([i.x for i in batch_list])
@@ -33,23 +49,22 @@ class MolecularBatch:
         self.mol_batch = self._collate_mol_batch([i.num_graphs for i in batch_list])
 
     def _collate_edge_index(self, edge_index_list: List[torch.LongTensor]) -> torch.LongTensor:
-        graph_edge_count = torch.LongTensor([max(i) for i in edge_index_list])
-        shift = torch.cumsum(graph_edge_count) - graph_edge_count[0]
+        graph_edge_count = torch.LongTensor([torch.max(i) for i in edge_index_list])
+        shift = torch.cumsum(graph_edge_count, dim=0) - graph_edge_count[0]
         return torch.cat([
             i + s for i, s in zip(edge_index_list, shift)
         ], dim=1)
 
     def _collate_atom_batch(self, batch_list: List[torch.Tensor]) -> torch.LongTensor:
-        batch_count = torch.LongTensor([max(i) for i in batch_list])
-        shift = torch.cumsum(batch_count) - batch_count[0]
+        batch_count = torch.LongTensor([torch.max(i) for i in batch_list])
+        shift = torch.cumsum(batch_count, dim=0) - batch_count[0]
         return torch.cat([
             i + s for i, s in zip(batch_list, shift)
         ])
 
     def _collate_mol_batch(self, num_atom_list: List[int]) -> torch.LongTensor:
         num_atom_list = torch.LongTensor(num_atom_list)
-        shift = torch.cumsum(num_atom_list) - num_atom_list[0]
-        return num_atom_list + shift
+        return torch.cat([torch.LongTensor([i]*num_atom_list[i]) for i in range(len(num_atom_list))])
 
 
 class BenzeneEnvMD17(Dataset):
@@ -109,8 +124,17 @@ class BenzeneMD17(BenzeneEnvMD17):
                 self._length = len(raw['E'])
         return self._length
 
+    @property
+    def z(self):
+        # cache z because it'll always be the same. silly to be doing io for this...
+        if not hasattr(self, '_z'):
+            self._z = self.f['z']
+        return self._z
+
     def get(self, mol_num):
-        z = self.f['z']
-        pos = self.f['R'][mol_num]
+        z = self.z
+        pos = np_to_torch(self.f['R'][mol_num])
+        E = self.f['E'][mol_num][0]
+        F = np_to_torch(self.f['F'][mol_num])
         data_list = [self.get_env(z, pos, i, self.r_cutoff) for i in range(len(z))]
-        return Batch.from_data_list(data_list)
+        return Molecule.from_envs(data_list, total_energy=E, force=F)
