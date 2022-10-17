@@ -4,8 +4,6 @@ import torch
 from torch_geometric.data import Dataset, Data, Batch
 import numpy as np
 import h5py
-from ase import Atoms
-from ase.neighborlist import NeighborList
 from scipy.spatial.distance import cdist
 import os
 from typing import List
@@ -114,3 +112,21 @@ class BenzeneMD17(BenzeneEnvMD17):
         pos = self.f['R'][mol_num]
         data_list = [self.get_env(z, pos, i, self.r_cutoff) for i in range(len(z))]
         return Batch.from_data_list(data_list)
+
+
+def mol_collate(batch):
+    return MolecularBatch(batch)
+
+
+class MoleculeDataLoader(torch.utils.data.DataLoader):
+    def __init__(self, 
+        dataset: Dataset,
+        batch_size: int = 1,
+        shuffle: bool = False,
+        **kwargs
+        ) -> None:
+
+        if 'collate_fn' in kwargs: 
+            del kwargs['collate_fn']
+
+        super().__init__(dataset, batch_size, shuffle, collate_fn=mol_collate, **kwargs)
