@@ -28,12 +28,25 @@ class AtomicEnvironment:
         return Data(x, edge_index, pos=pos)
 
 
+class EnvBatch(Batch):
+    @classmethod
+    def from_envs(cls, data_list):
+        env_batch = super().from_data_list(data_list)
+        first_idx = torch.cumsum(
+            torch.LongTensor([len(i) for i in data_list]),
+            dim=0
+        )
+        first_idx -= len(data_list[0])
+        env_batch.first_idx = first_idx
+        return env_batch
+
+
 class Molecule(Batch):
     total_energy: float
     force: torch.Tensor
 
     @classmethod
-    def from_envs(cls, data_list: list, total_energy: float, force: torch.FloatTensor):
+    def from_envs(cls, data_list: List[EnvBatch], total_energy: float, force: torch.FloatTensor):
         mol = super().from_data_list(data_list)
         mol.total_energy = total_energy
         mol.force = force

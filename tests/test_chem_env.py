@@ -51,3 +51,10 @@ def test_mol_batch():
     mol_batch_num = [0] * 12
     mol_batch_num.extend([1]*12)
     assert torch.allclose(molbatch.mol_batch, torch.LongTensor(mol_batch_num))
+
+
+def test_env_batch():
+    dataset = BenzeneEnvMD17('.')
+    d1, d2 = dataset[0], dataset[6]
+    batch = EnvBatch.from_envs([d1, d2])
+    assert torch.allclose(batch.first_idx, torch.LongTensor([0, len(d1)]))

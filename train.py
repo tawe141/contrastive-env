@@ -1,12 +1,12 @@
 from torch_geometric.nn import GCNConv, Sequential, global_mean_pool
-from torch_geometric.loader import DataLoader
+# from torch_geometric.loader import DataLoader
 import torch
+from torch.utils.data import DataLoader
 from torch.nn import ReLU, Linear, Embedding, Dropout
-from torch.nn.functional import log_softmax, cross_entropy, relu
+from torch.nn.functional import log_softmax, cross_entropy
 import pytorch_lightning as pl
-from chemical_env import BenzeneEnvMD17
+from chemical_env import BenzeneEnvMD17, EnvBatch
 from pytorch_lightning.callbacks import ModelCheckpoint
-from math import sin, cos
 from copy import deepcopy
 
 
@@ -15,18 +15,18 @@ MAX_SPECIES = 144
 BATCH_SIZE = 128
 
 
-def get_first_idx_in_batch(batch):
-    result = torch.zeros(torch.max(batch)+1, dtype=torch.long)
-    ptr = 1
-    for i in range(1, len(batch)):
-        if batch[i] > batch[i-1]:
-            result[ptr] = i
-            ptr += 1
-    return result
-
-
-def get_first_in_batch(x, batch):
-    return x[get_first_idx_in_batch(batch)]
+# def get_first_idx_in_batch(batch):
+#     result = torch.zeros(torch.max(batch)+1, dtype=torch.long)
+#     ptr = 1
+#     for i in range(1, len(batch)):
+#         if batch[i] > batch[i-1]:
+#             result[ptr] = i
+#             ptr += 1
+#     return result
+#
+#
+# def get_first_in_batch(x, batch):
+#     return x[get_first_idx_in_batch(batch)]
 
 
 class NaiveGCNLayer(GCNConv):
@@ -93,7 +93,7 @@ class ContrastiveRepresentation(pl.LightningModule):
         self.log('contrastive_ramp', weight)
         return weight
 
-    def logistic_central_species_loss(self, batch):
+    def logistic_central_species_loss(self, embedding, x, first_idx):
         """
         Returns a loss based on predicting what the central atom species is
         TODO: a couple ways to implement this, and I don't know which one is better
@@ -105,14 +105,16 @@ class ContrastiveRepresentation(pl.LightningModule):
         :param batch:
         :return:
         """
-        masked_x = deepcopy(batch.x)
-        masked_x[get_first_idx_in_batch(batch.batch)] = 0
+        masked_x = deepcopy(x)
+        masked_x[first_idx] = 0
 
         z = self._central_species_weights(
-            self.encoder(masked_x, batch.edge_index, batch.pos, batch.batch)
+            embedding
+            # self.encoder(masked_x, batch.edge_index, batch.pos, batch.batch)
         )
 
-        loss = cross_entropy(z, get_first_in_batch(batch.x, batch.batch))
+        # loss = cross_entropy(z, get_first_in_batch(batch.x, batch.batch))
+        loss = cross_entropy(z, x[first_idx])
         self.log('central_species_loss', loss)
         return loss
 
@@ -120,9 +122,9 @@ class ContrastiveRepresentation(pl.LightningModule):
         z = self.encoder(batch.x, batch.edge_index, batch.pos, batch.batch)
         z2 = self.encoder(batch.x, batch.edge_index, batch.pos, batch.batch)  # get second for dropout noise
 
-        loss = self.contrastive_ramp() * self.contrastive_loss(z, z2) + self.logistic_central_species_loss(batch)
+        loss = self.contrastive_ramp() * self.contrastive_loss(z, z2) + self.logistic_central_species_loss(z, batch.x, batch.first_idx)
         if self.global_step % 1000 == 0:
-            self.log_representations(z, get_first_in_batch(batch.x, batch.batch))
+            self.log_representations(z, batch.x[batch.first_idx])
         return loss
 
     def configure_optimizers(self):
@@ -160,7 +162,7 @@ class PosNoise(CosineContrastiveRepresentation):
 model = CosineContrastiveRepresentation()
 
 dataset = BenzeneEnvMD17('.')
-dl = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=6)
+dl = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=EnvBatch.from_envs)
 
 if __name__ == "__main__":
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints/', every_n_train_steps=5000)
