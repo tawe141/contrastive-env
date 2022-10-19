@@ -58,6 +58,7 @@ class MolecularBatch:
         self.edge_index = self._collate_edge_index([i.edge_index for i in batch_list])
         self.atom_batch = self._collate_atom_batch([i.batch for i in batch_list])
         self.mol_batch = self._collate_mol_batch([i.num_graphs for i in batch_list])
+        self.total_energy = torch.Tensor([i.total_energy for i in batch_list])
 
     def _collate_edge_index(self, edge_index_list: List[torch.LongTensor]) -> torch.LongTensor:
         graph_edge_count = torch.LongTensor([torch.max(i) for i in edge_index_list]) + 1
@@ -107,9 +108,20 @@ class BenzeneEnvMD17(Dataset):
             for i in ('E', 'F', 'R', 'z'):
                 f.create_dataset(i, data=raw[i])
 
+    def _open_hdf5(self):
+        self.f = h5py.File(self.processed_paths[0])
+
+    def cache_in_memory(self):
+        if not hasattr(self, 'f'):
+            self._open_hdf5()
+        tmp = {}
+        for key in ('E', 'F', 'R', 'z'):
+            tmp[key] = np.array(self.f[key])
+        self.f = tmp
+
     def __getitem__(self, idx):
         if not hasattr(self, 'f'):
-            self.f = h5py.File(self.processed_paths[0])
+            self._open_hdf5()
         return super().__getitem__(idx)
 
     @staticmethod
@@ -129,6 +141,9 @@ class BenzeneEnvMD17(Dataset):
 
 
 class BenzeneMD17(BenzeneEnvMD17):
+    def __init__(self, root, r_cutoff=3.0, transform=None, pre_transform=None, pre_filter=None):
+        super().__init__(root, r_cutoff, transform, pre_transform, pre_filter)
+
     def len(self):
         if not hasattr(self, '_length'):
             with np.load(self.raw_paths[0]) as raw:
@@ -142,10 +157,22 @@ class BenzeneMD17(BenzeneEnvMD17):
             self._z = self.f['z']
         return self._z
 
+    def _get_mean(self):
+        if not hasattr(self, 'f'):
+            self._open_hdf5()
+        if not hasattr(self, '_E_mean'):
+            self._E_mean = np.mean(self.f['E'])
+        return self._E_mean
+
+    def _get_std(self):
+        if not hasattr(self, '_E_std'):
+            self._E_std = np.std(self.f['E'])
+        return self._E_std
+
     def get(self, mol_num):
         z = self.z
         pos = np_to_torch(self.f['R'][mol_num])
-        E = self.f['E'][mol_num][0]
+        E = (self.f['E'][mol_num][0] - self._get_mean()) / self._get_std()
         F = np_to_torch(self.f['F'][mol_num])
         data_list = [self.get_env(z, pos, i, self.r_cutoff) for i in range(len(z))]
         return Molecule.from_envs(data_list, total_energy=E, force=F)

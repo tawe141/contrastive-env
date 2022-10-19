@@ -1,11 +1,11 @@
-from torch_geometric.nn import GCNConv, Sequential, global_mean_pool
+from torch_geometric.nn import GCNConv, Sequential, global_mean_pool, global_add_pool
 # from torch_geometric.loader import DataLoader
 import torch
 from torch.utils.data import DataLoader
 from torch.nn import ReLU, Linear, Embedding, Dropout
-from torch.nn.functional import log_softmax, cross_entropy
+from torch.nn.functional import log_softmax, cross_entropy, mse_loss
 import pytorch_lightning as pl
-from chemical_env import BenzeneEnvMD17, EnvBatch
+from chemical_env import BenzeneEnvMD17, BenzeneMD17, MoleculeDataLoader, EnvBatch
 from pytorch_lightning.callbacks import ModelCheckpoint
 from copy import deepcopy
 
@@ -54,6 +54,10 @@ class ContrastiveRepresentation(pl.LightningModule):
             (global_mean_pool, 'x, batch -> x'),
             (Linear(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x -> x')
         ])
+        self.potential = Sequential('x, batch', [
+            (Linear(HIDDEN_WIDTH, 1), 'x -> x'),
+            (global_add_pool, 'x, batch -> x')
+        ])
 
     def contrastive_loss(self, z1, z2=None):
         if z2 is None:
@@ -93,6 +97,12 @@ class ContrastiveRepresentation(pl.LightningModule):
         self.log('contrastive_ramp', weight)
         return weight
 
+    def energy_ramp(self):
+        linear_ramp = 0.0001 * (self.global_step - 10000)
+        weight = min(1, max(0, linear_ramp))
+        self.log('energy_ramp', weight)
+        return weight
+
     def logistic_central_species_loss(self, embedding, x, first_idx):
         """
         Returns a loss based on predicting what the central atom species is
@@ -119,17 +129,41 @@ class ContrastiveRepresentation(pl.LightningModule):
         return loss
 
     def training_step(self, batch) -> float:
-        z = self.encoder(batch.x, batch.edge_index, batch.pos, batch.batch)
-        z2 = self.encoder(batch.x, batch.edge_index, batch.pos, batch.batch)  # get second for dropout noise
+        env_batch, energy_batch = batch['env'], batch['energy']
 
-        loss = self.contrastive_ramp() * self.contrastive_loss(z, z2) + self.logistic_central_species_loss(z, batch.x, batch.first_idx)
+        z = self.encoder(env_batch.x, env_batch.edge_index, env_batch.pos, env_batch.batch)
+        # z2 = self.encoder(env_batch.x, env_batch.edge_index, env_batch.pos, env_batch.batch)  # get second for dropout noise
+
+        # loss = self.contrastive_ramp() * self.contrastive_loss(z, z2) + self.logistic_central_species_loss(z, batch.x, batch.first_idx)
+        loss = self.logistic_central_species_loss(z, env_batch.x, env_batch.first_idx)
+
+        if self.contrastive_ramp() > 0:
+            z2 = self.encoder(env_batch.x, env_batch.edge_index, env_batch.pos,
+                              env_batch.batch)  # get second for dropout noise
+            loss += self.contrastive_ramp() * self.contrastive_loss(z, z2)
+
+        if self.energy_ramp() > 0:
+            en_z = self.encoder(energy_batch.x, energy_batch.edge_index, energy_batch.pos, energy_batch.atom_batch)
+            energy_predict = self.potential(en_z, energy_batch.mol_batch)
+            loss += mse_loss(energy_predict, energy_batch.total_energy)
+
         if self.global_step % 1000 == 0:
-            self.log_representations(z, batch.x[batch.first_idx])
+            self.log_representations(z, env_batch.x[env_batch.first_idx])
         return loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
         return optimizer
+
+    def train_dataloader(self):
+        env_dataset = BenzeneEnvMD17('.')
+        env_dataset.cache_in_memory()
+        env_dl = DataLoader(env_dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=EnvBatch.from_envs)
+        energy_dataset = BenzeneMD17('.')
+        energy_dataset.cache_in_memory()
+        energy_dl = MoleculeDataLoader(energy_dataset, batch_size=BATCH_SIZE, shuffle=True)
+
+        return {'env': env_dl, 'energy': energy_dl}
 
     def log_representations(self, z, metadata):
         self.logger.experiment.add_embedding(z, global_step=self.global_step, metadata=metadata)
@@ -161,10 +195,8 @@ class PosNoise(CosineContrastiveRepresentation):
 
 model = CosineContrastiveRepresentation()
 
-dataset = BenzeneEnvMD17('.')
-dl = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=EnvBatch.from_envs)
 
 if __name__ == "__main__":
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints/', every_n_train_steps=5000)
     trainer = pl.Trainer(max_epochs=10, callbacks=[checkpoint_callback])
-    trainer.fit(model, dl)
+    trainer.fit(model)

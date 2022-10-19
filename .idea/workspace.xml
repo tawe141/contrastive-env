@@ -2,11 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="960e9b58-98ef-46dc-9b2d-05f515bbad36" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_chem_env.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_chem_env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/chemical_env.py" beforeDir="false" afterPath="$PROJECT_DIR$/chemical_env.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/train.py" beforeDir="false" afterPath="$PROJECT_DIR$/train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_pot.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_pot.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,6 +62,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="train_pot" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="contrastive-env" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_pot.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="pytest in test_chem_env.py" type="tests" factoryName="py.test" nameIsGenerated="true">
       <module name="contrastive-env" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -99,10 +120,12 @@
       <item itemvalue="Python.train" />
       <item itemvalue="Python tests.pytest in test_train.py" />
       <item itemvalue="Python tests.pytest in test_chem_env.py" />
+      <item itemvalue="Python.train_pot" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.train" />
+        <item itemvalue="Python.train_pot" />
       </list>
     </recent_temporary>
   </component>
@@ -117,6 +140,7 @@
       <option name="presentableId" value="Default" />
       <updated>1660599453712</updated>
       <workItem from="1660599455832" duration="13390000" />
+      <workItem from="1663870623052" duration="21195000" />
     </task>
     <servers />
   </component>
@@ -129,81 +153,86 @@
     </state>
     <state x="184" y="109" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1440.900@0.0.1440.900" timestamp="1660848911317" />
     <state x="1569" y="-787" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661389265075" />
-    <state x="1794" y="-81" width="616" height="571" key="#xdebugger.evaluate" timestamp="1661463227003">
+    <state x="1794" y="-81" width="740" height="504" key="#xdebugger.evaluate" timestamp="1666052213113">
       <screen x="1440" y="-1020" width="1200" height="1920" />
     </state>
+    <state x="500" y="377" width="740" height="504" key="#xdebugger.evaluate/0.0.1440.900@0.0.1440.900" timestamp="1663974888211" />
     <state x="1794" y="-81" key="#xdebugger.evaluate/0.25.1440.817/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661459921766" />
-    <state x="1794" y="-81" width="616" height="571" key="#xdebugger.evaluate/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661463227003" />
-    <state width="1156" height="323" key="GridCell.Tab.0.bottom" timestamp="1663109820429">
-      <screen x="1440" y="-1020" width="1200" height="1920" />
+    <state x="1794" y="-81" width="616" height="571" key="#xdebugger.evaluate/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666052213113" />
+    <state width="1398" height="392" key="GridCell.Tab.0.bottom" timestamp="1666217306772">
+      <screen x="0" y="0" width="1440" height="900" />
     </state>
-    <state width="1396" height="323" key="GridCell.Tab.0.bottom/0.0.1440.900@0.0.1440.900" timestamp="1661555652347" />
+    <state width="1398" height="239" key="GridCell.Tab.0.bottom/0.0.1440.900/1440.-995.1200.1895@0.0.1440.900" timestamp="1666050552061" />
+    <state width="1398" height="392" key="GridCell.Tab.0.bottom/0.0.1440.900@0.0.1440.900" timestamp="1666217306772" />
     <state width="1156" height="590" key="GridCell.Tab.0.bottom/0.25.1440.817/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661461985406" />
-    <state width="1156" height="323" key="GridCell.Tab.0.bottom/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1663109820429" />
-    <state width="1156" height="323" key="GridCell.Tab.0.center" timestamp="1663109820428">
-      <screen x="1440" y="-1020" width="1200" height="1920" />
+    <state width="1158" height="1007" key="GridCell.Tab.0.bottom/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666133722234" />
+    <state width="1398" height="392" key="GridCell.Tab.0.center" timestamp="1666217306771">
+      <screen x="0" y="0" width="1440" height="900" />
     </state>
-    <state width="1396" height="323" key="GridCell.Tab.0.center/0.0.1440.900@0.0.1440.900" timestamp="1661555652346" />
+    <state width="1398" height="239" key="GridCell.Tab.0.center/0.0.1440.900/1440.-995.1200.1895@0.0.1440.900" timestamp="1666050552060" />
+    <state width="1398" height="392" key="GridCell.Tab.0.center/0.0.1440.900@0.0.1440.900" timestamp="1666217306771" />
     <state width="1156" height="590" key="GridCell.Tab.0.center/0.25.1440.817/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661461985405" />
-    <state width="1156" height="323" key="GridCell.Tab.0.center/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1663109820428" />
-    <state width="1156" height="323" key="GridCell.Tab.0.left" timestamp="1663109820426">
-      <screen x="1440" y="-1020" width="1200" height="1920" />
+    <state width="1158" height="1007" key="GridCell.Tab.0.center/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666133722233" />
+    <state width="1398" height="392" key="GridCell.Tab.0.left" timestamp="1666217306771">
+      <screen x="0" y="0" width="1440" height="900" />
     </state>
-    <state width="1396" height="323" key="GridCell.Tab.0.left/0.0.1440.900@0.0.1440.900" timestamp="1661555652346" />
+    <state width="1398" height="239" key="GridCell.Tab.0.left/0.0.1440.900/1440.-995.1200.1895@0.0.1440.900" timestamp="1666050552060" />
+    <state width="1398" height="392" key="GridCell.Tab.0.left/0.0.1440.900@0.0.1440.900" timestamp="1666217306771" />
     <state width="1156" height="590" key="GridCell.Tab.0.left/0.25.1440.817/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661461985405" />
-    <state width="1156" height="323" key="GridCell.Tab.0.left/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1663109820426" />
-    <state width="1156" height="323" key="GridCell.Tab.0.right" timestamp="1663109820428">
-      <screen x="1440" y="-1020" width="1200" height="1920" />
+    <state width="1158" height="1007" key="GridCell.Tab.0.left/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666133722232" />
+    <state width="1398" height="392" key="GridCell.Tab.0.right" timestamp="1666217306771">
+      <screen x="0" y="0" width="1440" height="900" />
     </state>
-    <state width="1396" height="323" key="GridCell.Tab.0.right/0.0.1440.900@0.0.1440.900" timestamp="1661555652347" />
+    <state width="1398" height="239" key="GridCell.Tab.0.right/0.0.1440.900/1440.-995.1200.1895@0.0.1440.900" timestamp="1666050552061" />
+    <state width="1398" height="392" key="GridCell.Tab.0.right/0.0.1440.900@0.0.1440.900" timestamp="1666217306771" />
     <state width="1156" height="590" key="GridCell.Tab.0.right/0.25.1440.817/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661461985406" />
-    <state width="1156" height="323" key="GridCell.Tab.0.right/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1663109820428" />
-    <state width="1156" height="692" key="GridCell.Tab.1.bottom" timestamp="1661463250776">
+    <state width="1158" height="1007" key="GridCell.Tab.0.right/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666133722233" />
+    <state width="1158" height="692" key="GridCell.Tab.1.bottom" timestamp="1666052255347">
       <screen x="1440" y="-1020" width="1200" height="1920" />
     </state>
-    <state width="1396" height="284" key="GridCell.Tab.1.bottom/0.0.1440.900@0.0.1440.900" timestamp="1660849238964" />
-    <state width="1156" height="692" key="GridCell.Tab.1.bottom/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661463250776" />
-    <state width="1156" height="692" key="GridCell.Tab.1.center" timestamp="1661463250775">
+    <state width="1398" height="284" key="GridCell.Tab.1.bottom/0.0.1440.900@0.0.1440.900" timestamp="1663974896267" />
+    <state width="1398" height="284" key="GridCell.Tab.1.bottom/0.25.1440.807@0.25.1440.807" timestamp="1663967593258" />
+    <state width="1158" height="692" key="GridCell.Tab.1.bottom/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666052255347" />
+    <state width="1158" height="692" key="GridCell.Tab.1.center" timestamp="1666052255347">
       <screen x="1440" y="-1020" width="1200" height="1920" />
     </state>
-    <state width="1396" height="284" key="GridCell.Tab.1.center/0.0.1440.900@0.0.1440.900" timestamp="1660849238963" />
-    <state width="1156" height="692" key="GridCell.Tab.1.center/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661463250775" />
-    <state width="1156" height="692" key="GridCell.Tab.1.left" timestamp="1661463250775">
+    <state width="1398" height="284" key="GridCell.Tab.1.center/0.0.1440.900@0.0.1440.900" timestamp="1663974896266" />
+    <state width="1398" height="284" key="GridCell.Tab.1.center/0.25.1440.807@0.25.1440.807" timestamp="1663967593258" />
+    <state width="1158" height="692" key="GridCell.Tab.1.center/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666052255347" />
+    <state width="1158" height="692" key="GridCell.Tab.1.left" timestamp="1666052255347">
       <screen x="1440" y="-1020" width="1200" height="1920" />
     </state>
-    <state width="1396" height="284" key="GridCell.Tab.1.left/0.0.1440.900@0.0.1440.900" timestamp="1660849238963" />
-    <state width="1156" height="692" key="GridCell.Tab.1.left/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661463250775" />
-    <state width="1156" height="692" key="GridCell.Tab.1.right" timestamp="1661463250775">
+    <state width="1398" height="284" key="GridCell.Tab.1.left/0.0.1440.900@0.0.1440.900" timestamp="1663974896266" />
+    <state width="1398" height="284" key="GridCell.Tab.1.left/0.25.1440.807@0.25.1440.807" timestamp="1663967593257" />
+    <state width="1158" height="692" key="GridCell.Tab.1.left/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666052255347" />
+    <state width="1158" height="692" key="GridCell.Tab.1.right" timestamp="1666052255347">
       <screen x="1440" y="-1020" width="1200" height="1920" />
     </state>
-    <state width="1396" height="284" key="GridCell.Tab.1.right/0.0.1440.900@0.0.1440.900" timestamp="1660849238964" />
-    <state width="1156" height="692" key="GridCell.Tab.1.right/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661463250775" />
-    <state width="600" height="960" key="XDebugger.FullValuePopup" timestamp="1661460828036">
+    <state width="1398" height="284" key="GridCell.Tab.1.right/0.0.1440.900@0.0.1440.900" timestamp="1663974896266" />
+    <state width="1398" height="284" key="GridCell.Tab.1.right/0.25.1440.807@0.25.1440.807" timestamp="1663967593258" />
+    <state width="1158" height="692" key="GridCell.Tab.1.right/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666052255347" />
+    <state width="600" height="960" key="XDebugger.FullValuePopup" timestamp="1666052212105">
       <screen x="1440" y="-1020" width="1200" height="1920" />
     </state>
+    <state width="720" height="450" key="XDebugger.FullValuePopup/0.0.1440.900@0.0.1440.900" timestamp="1663967704097" />
     <state width="600" height="960" key="XDebugger.FullValuePopup/0.25.1440.817/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661459918247" />
-    <state width="600" height="960" key="XDebugger.FullValuePopup/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1661460828036" />
+    <state width="600" height="960" key="XDebugger.FullValuePopup/0.25.1440.875/1440.-1020.1200.1920@1440.-1020.1200.1920" timestamp="1666052212105" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/chemical_env.py</url>
-          <line>73</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <condition expression="self.global_step &gt; 300" language="Python" />
-          <url>file://$PROJECT_DIR$/train.py</url>
-          <line>139</line>
-          <option name="timeStamp" value="10" />
+          <url>file://$PROJECT_DIR$/train_pot.py</url>
+          <line>27</line>
+          <option name="timeStamp" value="16" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/contrastive_env$pytest_in_test_train_py.coverage" NAME="pytest in test_train.py Coverage Results" MODIFIED="1661463488075" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/contrastive_env$train.coverage" NAME="train Coverage Results" MODIFIED="1663106600411" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/contrastive_env$pytest_in_test_chem_env_py.coverage" NAME="pytest in test_chem_env.py Coverage Results" MODIFIED="1661469435127" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/contrastive_env$train_pot.coverage" NAME="train_pot Coverage Results" MODIFIED="1666053275955" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/contrastive_env$train.coverage" NAME="train Coverage Results" MODIFIED="1666217306762" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/contrastive_env$pytest_in_test_chem_env_py.coverage" NAME="pytest in test_chem_env.py Coverage Results" MODIFIED="1665793143401" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

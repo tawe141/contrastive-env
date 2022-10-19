@@ -1,4 +1,4 @@
-from turtle import forward
+# from turtle import forward
 import pytorch_lightning as pl
 from chemical_env import BenzeneMD17, MoleculeDataLoader
 import torch
@@ -22,17 +22,17 @@ class LinearPotential(pl.LightningModule):
         return optimizer
 
     def training_step(self, batch):
-        with torch.no_grad():
-            embeddings = env_model.encoder(batch.x, batch.edge_index, batch.pos, batch.atom_batch)
+        # with torch.no_grad():
+        embeddings = env_model.encoder(batch.x, batch.edge_index, batch.pos, batch.atom_batch)
         per_site_energy = self.pot(embeddings)
         total_energy = torch.zeros(batch.mol_batch[-1]+1).scatter_add_(0, batch.mol_batch, per_site_energy.flatten())
-        
+        return torch.nn.functional.mse_loss(total_energy, batch.total_energy)
 
 
 model = LinearPotential()
 
 dataset = BenzeneMD17('.')
-dl = MoleculeDataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
+dl = MoleculeDataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
 
 if __name__ == "__main__":
     trainer = pl.Trainer(max_epochs=10)
