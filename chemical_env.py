@@ -5,6 +5,7 @@ from torch_geometric.data import Dataset, Data, Batch
 import numpy as np
 import h5py
 from scipy.spatial.distance import cdist
+import pdb
 import os
 from typing import List
 
@@ -31,7 +32,7 @@ class EnvBatch(Batch):
     def from_envs(cls, data_list):
         env_batch = super().from_data_list(data_list)
         first_idx = torch.cumsum(
-            torch.LongTensor([len(i) for i in data_list]),
+            torch.LongTensor([len(i.x) for i in data_list]),
             dim=0
         )
         first_idx -= len(data_list[0])
@@ -103,7 +104,7 @@ class BenzeneEnvMD17(Dataset):
         return '%s.hdf5' % basename
 
     def process(self):
-        with np.load(self.raw_paths[0]) as raw:
+        with np.load(self.raw_paths[0], allow_pickle=True) as raw:
             f = h5py.File(self.processed_paths[0], 'w')
             for i in ('E', 'F', 'R', 'z'):
                 f.create_dataset(i, data=raw[i])

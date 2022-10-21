@@ -1,4 +1,4 @@
-from torch_geometric.nn import GCNConv, Sequential, global_mean_pool, global_add_pool
+from torch_geometric.nn import GCNConv, Sequential, global_mean_pool, global_add_pool, BatchNorm, global_max_pool
 # from torch_geometric.loader import DataLoader
 import torch
 from torch.utils.data import DataLoader
@@ -7,12 +7,14 @@ from torch.nn.functional import log_softmax, cross_entropy, mse_loss
 import pytorch_lightning as pl
 from chemical_env import BenzeneEnvMD17, BenzeneMD17, MoleculeDataLoader, EnvBatch
 from pytorch_lightning.callbacks import ModelCheckpoint
+from multiprocessing import cpu_count
 from copy import deepcopy
 
 
 HIDDEN_WIDTH = 16
 MAX_SPECIES = 144
 BATCH_SIZE = 128
+NUM_WORKERS = cpu_count()
 
 
 # def get_first_idx_in_batch(batch):
@@ -48,10 +50,12 @@ class ContrastiveRepresentation(pl.LightningModule):
             (Embedding(MAX_SPECIES, HIDDEN_WIDTH), 'x -> x'),
             (Dropout(p=0.1), 'x -> x'),
             (NaiveGCNLayer(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x, edge_index, pos -> x'),
+            #(BatchNorm(HIDDEN_WIDTH), 'x -> x'),
             ReLU(inplace=True),
             (Dropout(p=0.1), 'x -> x'),
             (NaiveGCNLayer(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x, edge_index, pos -> x'),
-            (global_mean_pool, 'x, batch -> x'),
+            #(BatchNorm(HIDDEN_WIDTH), 'x -> x'),
+            (global_max_pool, 'x, batch -> x'),
             (Linear(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x -> x')
         ])
         self.potential = Sequential('x, batch', [
@@ -145,7 +149,9 @@ class ContrastiveRepresentation(pl.LightningModule):
         if self.energy_ramp() > 0:
             en_z = self.encoder(energy_batch.x, energy_batch.edge_index, energy_batch.pos, energy_batch.atom_batch)
             energy_predict = self.potential(en_z, energy_batch.mol_batch)
-            loss += mse_loss(energy_predict, energy_batch.total_energy)
+            energy_loss = mse_loss(energy_predict.squeeze(), energy_batch.total_energy.squeeze())
+            loss += energy_loss
+            self.log('energy_mse', energy_loss)
 
         if self.global_step % 1000 == 0:
             self.log_representations(z, env_batch.x[env_batch.first_idx])
@@ -158,10 +164,10 @@ class ContrastiveRepresentation(pl.LightningModule):
     def train_dataloader(self):
         env_dataset = BenzeneEnvMD17('.')
         env_dataset.cache_in_memory()
-        env_dl = DataLoader(env_dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=EnvBatch.from_envs)
+        env_dl = DataLoader(env_dataset, batch_size=BATCH_SIZE, shuffle=True, collate_fn=EnvBatch.from_envs, num_workers=NUM_WORKERS//2)
         energy_dataset = BenzeneMD17('.')
         energy_dataset.cache_in_memory()
-        energy_dl = MoleculeDataLoader(energy_dataset, batch_size=BATCH_SIZE, shuffle=True)
+        energy_dl = MoleculeDataLoader(energy_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS//2)
 
         return {'env': env_dl, 'energy': energy_dl}
 
