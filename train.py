@@ -1,4 +1,5 @@
 from torch_geometric.nn import GCNConv, Sequential, global_mean_pool, global_add_pool, BatchNorm, global_max_pool
+from egnn_pytorch.egnn_pytorch_geometric import EGNN_Sparse
 # from torch_geometric.loader import DataLoader
 import torch
 from torch.utils.data import DataLoader
@@ -13,7 +14,7 @@ from math import sin, cos
 import pdb
 
 
-HIDDEN_WIDTH = 64
+HIDDEN_WIDTH = 16
 MAX_SPECIES = 144
 BATCH_SIZE = 128
 NUM_WORKERS = cpu_count()
@@ -34,15 +35,30 @@ ACTIVATION_FN = torch.nn.SiLU
 #     return x[get_first_idx_in_batch(batch)]
 
 
-class NaiveGCNLayer(GCNConv):
-    def __init__(self, in_channels, out_channels):
-        super().__init__(in_channels+3, out_channels)  # "Add" aggregation (Step 5).
+#class NaiveGCNLayer(GCNConv):
+#    def __init__(self, in_channels, out_channels):
+#        super().__init__(in_channels+3, out_channels)  # "Add" aggregation (Step 5).
+#
+#    def forward(self, x, edge_index, pos):
+#        return super().forward(
+#            torch.cat([x, pos], dim=1),
+#            edge_index
+#        )
 
-    def forward(self, x, edge_index, pos):
-        return super().forward(
-            torch.cat([x, pos], dim=1),
-            edge_index
-        )
+class ConcatLayer(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x, pos):
+        return torch.cat([pos, x], dim=1)
+
+
+class DecoupleLayer(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return x[:, :3], x[:, 3:]
 
 
 class ContrastiveRepresentation(pl.LightningModule):
@@ -53,16 +69,18 @@ class ContrastiveRepresentation(pl.LightningModule):
         self._central_species_weights = Linear(HIDDEN_WIDTH, MAX_SPECIES)
         self.encoder = Sequential('x, edge_index, pos, batch', [
             (Embedding(MAX_SPECIES, HIDDEN_WIDTH), 'x -> x'),
-            (Dropout(p=0.1), 'x -> x'),
-            (NaiveGCNLayer(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x, edge_index, pos -> x'),
+            (ConcatLayer(), 'x, pos -> x'),  # needed to get the right ordering for features
+            #(Dropout(p=0.1), 'x -> x'),
+            (EGNN_Sparse(HIDDEN_WIDTH), 'x, edge_index -> x'),
             #(BatchNorm(HIDDEN_WIDTH), 'x -> x'),
             ACTIVATION_FN(inplace=True),
             (Dropout(p=0.1), 'x -> x'),
-            (NaiveGCNLayer(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x, edge_index, pos -> x'),
+            (EGNN_Sparse(HIDDEN_WIDTH), 'x, edge_index -> x'),
             #(BatchNorm(HIDDEN_WIDTH), 'x -> x'),
             ACTIVATION_FN(inplace=True),
             (Dropout(p=0.1), 'x -> x'),
-            (NaiveGCNLayer(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x, edge_index, pos -> x'),
+            (EGNN_Sparse(HIDDEN_WIDTH), 'x, edge_index -> x'),
+            (DecoupleLayer(), 'x -> pos, x'),
             (global_max_pool, 'x, batch -> x'),
             (Linear(HIDDEN_WIDTH, HIDDEN_WIDTH), 'x -> x')
         ])
@@ -81,34 +99,34 @@ class ContrastiveRepresentation(pl.LightningModule):
         self.log('contrastive_loss', loss)
         return loss
     
-    def rotation_contrastive_loss(self, z, batch):
-        a, b, c = torch.rand(3) * 2 * torch.pi - torch.pi
-        # rotation matrices from wikipedia
-        # https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
-        yaw = torch.Tensor([
-            [cos(a), -sin(a), 0],
-            [sin(a), cos(a), 0],
-            [0, 0, 1]
-        ])
-        pitch = torch.Tensor([
-            [cos(b), 0, sin(b)],
-            [0, 1, 0],
-            [-sin(b), 0, cos(b)]
-        ])
-        roll = torch.Tensor([
-            [1, 0, 0],
-            [0, cos(c), -sin(c)],
-            [0, sin(c), cos(c)]
-        ])
-        R = yaw @ pitch @ roll
-    
-        z2 = self.encoder(batch.x, batch.edge_index, batch.pos @ R.T, batch.batch)
-
-        # lots of different ways to make the loss function here
-        # could do elementwise MSE loss
-        # or dot product
-        # or use this as the contrastive loss
-        return self.contrastive_loss(z, z2)
+#    def rotation_contrastive_loss(self, z, batch):
+#        a, b, c = torch.rand(3) * 2 * torch.pi - torch.pi
+#        # rotation matrices from wikipedia
+#        # https://en.wikipedia.org/wiki/Rotation_matrix#In_three_dimensions
+#        yaw = torch.Tensor([
+#            [cos(a), -sin(a), 0],
+#            [sin(a), cos(a), 0],
+#            [0, 0, 1]
+#        ])
+#        pitch = torch.Tensor([
+#            [cos(b), 0, sin(b)],
+#            [0, 1, 0],
+#            [-sin(b), 0, cos(b)]
+#        ])
+#        roll = torch.Tensor([
+#            [1, 0, 0],
+#            [0, cos(c), -sin(c)],
+#            [0, sin(c), cos(c)]
+#        ])
+#        R = yaw @ pitch @ roll
+#    
+#        z2 = self.encoder(batch.x, batch.edge_index, batch.pos @ R.T, batch.batch)
+#
+#        # lots of different ways to make the loss function here
+#        # could do elementwise MSE loss
+#        # or dot product
+#        # or use this as the contrastive loss
+#        return self.contrastive_loss(z, z2)
     
 
     def contrastive_ramp(self):
@@ -118,7 +136,7 @@ class ContrastiveRepresentation(pl.LightningModule):
         return weight
 
     def energy_ramp(self):
-        linear_ramp = 0.0001 * (self.global_step - 3000)
+        linear_ramp = 0.0001 * (self.global_step - 100)
         weight = min(1, max(0, linear_ramp))
         self.log('energy_ramp', weight)
         return weight
@@ -153,7 +171,7 @@ class ContrastiveRepresentation(pl.LightningModule):
 
         z = self.encoder(env_batch.x, env_batch.edge_index, env_batch.pos, env_batch.batch)
         loss = self.logistic_central_species_loss(z, env_batch.x, env_batch.first_idx)
-
+        
         #if self.contrastive_ramp() > 0:
         #    if self.rotate:
         #        loss += self.contrastive_ramp() * self.rotation_contrastive_loss(z, env_batch)
@@ -165,8 +183,6 @@ class ContrastiveRepresentation(pl.LightningModule):
         if self.energy_ramp() > 0:
             en_z = self.encoder(energy_batch.x, energy_batch.edge_index, energy_batch.pos, energy_batch.atom_batch)
             energy_predict = self.potential(en_z, energy_batch.mol_batch)
-            #if self.global_step > 5000:
-            #    pdb.set_trace()
             energy_loss = mse_loss(energy_predict.squeeze(), energy_batch.total_energy.squeeze())
             loss += energy_loss
             self.log('scaled_energy_mse', energy_loss)

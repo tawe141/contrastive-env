@@ -1,0 +1,3 @@
+[submodule "egnn-pytorch"]
+	path = egnn-pytorch
+	url = https://github.com/lucidrains/egnn-pytorch.git

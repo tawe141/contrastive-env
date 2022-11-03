@@ -35,7 +35,10 @@ class EnvBatch(Batch):
             torch.LongTensor([len(i.x) for i in data_list]),
             dim=0
         )
-        first_idx -= len(data_list[0])
+        #pdb.set_trace()
+        #first_idx -= len(data_list[0].x)
+        first_idx = torch.roll(first_idx, 1)
+        first_idx[0] = 0
         env_batch.first_idx = first_idx
         return env_batch
 

@@ -1,4 +1,6 @@
 from chemical_env import *
+import numpy as np
+import pdb
 import torch
 
 
@@ -37,6 +39,7 @@ def test_benzene_md17():
     assert isinstance(dataset[0].force, torch.DoubleTensor)
     assert isinstance(dataset[0].pos, torch.DoubleTensor)
 
+    assert np.allclose(dataset[0].total_energy, (-146536.1068 - -146527.27916135496) / 2.3454991804448895)
 
 def test_mol_batch():
     dataset = BenzeneMD17('.')
@@ -57,5 +60,6 @@ def test_mol_batch():
 def test_env_batch():
     dataset = BenzeneEnvMD17('.')
     d1, d2 = dataset[0], dataset[6]
+    #pdb.set_trace()
     batch = EnvBatch.from_envs([d1, d2])
-    assert torch.allclose(batch.first_idx, torch.LongTensor([0, len(d1)]))
+    assert torch.allclose(batch.first_idx, torch.LongTensor([0, len(d1.x)]))
