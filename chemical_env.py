@@ -93,7 +93,7 @@ class BenzeneEnvMD17(Dataset):
 
     @property
     def raw_file_names(self) -> Union[str, List[str], Tuple]:
-        return 'benzene2017_dft.npz'
+        return 'benzene_old_dft.npz'
 
     def len(self):
         if not hasattr(self, '_length'):
